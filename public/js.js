@@ -372,15 +372,19 @@ startY = 429;
             if(type == 'chat'){
                 //style text
                 wd.font = "12px Comic Sans MS";
-                wd.fillStyle = "black";
+                wd.fillStyle = "white";
                 wd.textBaseline = 'top';
                 
                 //measure and draw background
                 var width = wd.measureText(msg.msg).width;
-                wd.fillRect(positions[msg.id].x-(width/2)+(frameWidth/2),positions[msg.id].y-30,width,18);
-                wd.fillStyle = "white";
+                wd.beginPath();
+                wd.lineWidth="2";
+                wd.rect(positions[msg.id].x-(width/2)+(frameWidth/2)-15,positions[msg.id].y-30,width+30,18);
+                wd.fill();
+                wd.stroke();
+                wd.fillStyle = "black";
                 wd.fillText(msg.msg,positions[msg.id].x-(width/2)+(frameWidth/2),positions[msg.id].y-30);
-                erase(positions[msg.id].x-(width/2)+(frameWidth/2),positions[msg.id].y-30,width) 
+                erase(positions[msg.id].x-(width/2)+(frameWidth/2)-15,positions[msg.id].y-30,width+30) 
             }
             
             if(blurred){
@@ -393,7 +397,7 @@ startY = 429;
         //clear message
         function erase(x,y,width){
             setTimeout(function(){
-                wd.clearRect(x-1,y-1, width+15,20);
+                wd.clearRect(x-1,y-1, width+15,30);
             },5000)
         }
     });
