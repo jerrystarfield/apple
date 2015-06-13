@@ -6,16 +6,15 @@
 </head>
 
 <body>
-    <div id="login">
-        <input/>
-    </div>
     <div id="chat">
-        <ul></ul>
+        <div id="messages"></div>
         <input/>
     </div>
     <canvas id="main"></canvas>
+    <canvas id="collision"></canvas>
     <canvas id="char"></canvas>
     <canvas id="words"></canvas>
+    <input id="upload" type="file" accept="image/*" style="display:none;"/>
 </body>
  <script src="/socket.io/socket.io.js"></script>
  <script src="js.js"></script>
