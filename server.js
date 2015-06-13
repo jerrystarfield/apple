@@ -41,8 +41,7 @@ io.on('connection', function(socket) {
                 x : data.x,
                 y : data.y,
                 action : data.action,
-                nick : user.nick,
-                avy : user.avy
+                nick : user.nick
             }
         }
     });
@@ -67,8 +66,10 @@ io.on('connection', function(socket) {
                 name : cmd
             }
         }
-        for (i = 0; i < cmd.param.length; i++) {//remove useless characters 
-            cmd.param[i] = cmd.param[i].replace(/[^a-z0-9\s]/gi, '').replace(/[_\s]/g, '-');
+        if(cmd.param){
+            for (i = 0; i < cmd.param.length; i++) {//remove useless characters 
+                cmd.param[i] = cmd.param[i].replace(/[^a-z0-9\s]/gi, '').replace(/[_\s]/g, '-');
+            }
         }
         console.log(cmd)
         switch(cmd.name){
@@ -158,8 +159,23 @@ io.on('connection', function(socket) {
         }
     });
     
-    socket.on('uploadavy', function(data){
-        user.avy = data
+    socket.on('loadavy', function(){//emit all avys to the client
+        for (i = 0; i < everyone.length; i++) {
+            if(everyone[i].avy){
+                socket.emit('loadavys',{
+                    id : everyone[i].socket.id,
+                    avy : everyone[i].avy
+                });
+            }
+        }
+    });
+    
+    socket.on('uploadavy', function(data){//change avy
+        user.avy = data;
+        io.emit('loadavys',{
+            id : user.socket.id,
+            avy : user.avy
+        })
     });
     
     //actions!
@@ -207,6 +223,6 @@ app.get('/', function(req, res){
 });
 app.use(express.static(__dirname + '/public'));
 
-http.listen(8080, function(){
+http.listen(80, function(){
   console.log('listening on *:80');
 });

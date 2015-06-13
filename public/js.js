@@ -21,6 +21,15 @@ var wd = words.getContext('2d');
 var collision = document.getElementById('collision');
 var cn = collision.getContext('2d');
 
+//all ingame objects
+var OBJECTS = {
+    gate : {
+        x : 1079,
+        y : 412,
+        src : 'chaosgate.gif'
+    }
+}
+
 //starting point
 startX = 1110;
 startY = 429;
@@ -38,8 +47,7 @@ startY = 429;
             down:false,
             left:false
         },
-        action : 0,
-        nick : 'anonymous'
+        action : 0
     };
     
     //store everyones current positions
@@ -78,14 +86,9 @@ startY = 429;
     //running multiplier
     var modifyer = 1;
     
-    //draw background
+    //get background
     var tileset = new Image();
     tileset.src = 'map_b.png'
-    
-    //size of tiles
-    var tileSize = 32;
-    var row = 60;
-    var col = 36;
     
     tileset.onload = function(){
         BACKGROUND_WIDTH = tileset.width;
@@ -112,16 +115,25 @@ startY = 429;
         coll.onload = function(){
             cn.drawImage(coll,0,0)
         }
-                
-        /*for (r = 0; r < col; r++) { 
-            for (i = 0; i < row; i++) { 
-                if(i * tileSize < BACKGROUND_WIDTH){
-                    //draw background tile
-                    bg.drawImage(tileset, tileSize*i, tileSize*r,tileSize,tileSize,(i * tileSize),(r * tileSize),tileSize,tileSize)
-                }
+        
+        //draw background image
+        bg.drawImage(tileset,0,0);
+        
+        //draw all ingame objects
+        var keys = Object.keys(OBJECTS);
+        for (i = 0; i < keys.length; i++) { 
+            var obj = OBJECTS[keys[i]];
+            var item = new Image();
+            item.src = obj.src;
+            item.onload = function(){
+                //console.log(item,0,0,item.width,item.height,obj.x,obj.y)
+                //bg.drawImage(item,0,0,item.width,item.height,obj.x,obj.y,item.width,item.height)
+                item.style.position = 'absolute';
+                item.style.left = obj.x;
+                item.style.top = obj.y;
+                $('body').append(item)
             }
-        }*/
-        bg.drawImage(tileset,0,0)
+        }
         
         //game loop
         setInterval(loop, 5000 / 30);
@@ -309,57 +321,82 @@ startY = 429;
             }
         }
     });
-   
-    //receive message
-    socket.on('msg', function(msg){
-        buildMessage(msg,'chat');
-    });
-   
-    //system messages
-    socket.on('alert', function(msg){
-        alert(msg)
-    });
     
-    function alert(msg){
-        buildMessage({
-            name : 'System',
-            msg : msg
-        },'alert');
-    }
-    
-    function buildMessage(msg,type){
-        el = document.createElement('div');
-        name = msg.name !== undefined ? msg.name += ': ' : 'Anonymous: ';//checks if name is defined if not equals anonymous
-        nameSpan = document.createElement('span');
-        nameText = document.createTextNode(name);
-        nameSpan.appendChild(nameText);
-        message = document.createTextNode(msg.msg);
-        el.appendChild(nameSpan);
-        el.appendChild(message)
-        $('#messages').append(el);
-        $("#messages").animate({ scrollTop: $("#messages")[0].scrollHeight }, "slow");
+    //handles all messaging 
+    $(function(){
+        var audioElement = document.createElement('audio');
+        audioElement.setAttribute('src', 'audio/Bing.mp3');
         
-        if(type == 'chat'){
-            //style text
-            wd.font = "12px Comic Sans MS";
-            wd.fillStyle = "black";
-            wd.textBaseline = 'top';
-            
-            //measure and draw background
-            var width = wd.measureText(msg.msg).width;
-            wd.fillRect(positions[msg.id].x-(width/2)+(frameWidth/2),positions[msg.id].y-30,width,18);
-            wd.fillStyle = "white";
-            wd.fillText(msg.msg,positions[msg.id].x-(width/2)+(frameWidth/2),positions[msg.id].y-30);
-            erase(positions[msg.id].x-(width/2)+(frameWidth/2),positions[msg.id].y-30,width) 
+        var blurred = false;
+        var missed = 0;
+        
+        $(window).blur(function() {
+            blurred = true;
+        });
+        
+        $(window).focus(function() {
+            blurred = false;
+            missed = 0;
+            document.title = 'this.spooks.me'
+        });
+        
+        //receive message
+        socket.on('msg', function(msg){
+            buildMessage(msg,'chat');
+        });
+       
+        //system messages
+        socket.on('alert', function(msg){
+            alert(msg)
+        });
+        
+        function alert(msg){
+            buildMessage({
+                name : 'System',
+                msg : msg
+            },'alert');
         }
-    }
-   
-    //clear message
-    function erase(x,y,width){
-        setTimeout(function(){
-            wd.clearRect(x-1,y-1, width+15,20);
-        },5000)
-    }
+    
+        function buildMessage(msg,type){
+            el = document.createElement('div');
+            name = msg.name !== undefined ? msg.name += ': ' : 'Anonymous: ';//checks if name is defined if not equals anonymous
+            nameSpan = document.createElement('span');
+            nameText = document.createTextNode(name);
+            nameSpan.appendChild(nameText);
+            message = document.createTextNode(msg.msg);
+            el.appendChild(nameSpan);
+            el.appendChild(message)
+            $('#messages').append(el);
+            $("#messages").animate({ scrollTop: $("#messages")[0].scrollHeight }, "slow");
+            
+            if(type == 'chat'){
+                //style text
+                wd.font = "12px Comic Sans MS";
+                wd.fillStyle = "black";
+                wd.textBaseline = 'top';
+                
+                //measure and draw background
+                var width = wd.measureText(msg.msg).width;
+                wd.fillRect(positions[msg.id].x-(width/2)+(frameWidth/2),positions[msg.id].y-30,width,18);
+                wd.fillStyle = "white";
+                wd.fillText(msg.msg,positions[msg.id].x-(width/2)+(frameWidth/2),positions[msg.id].y-30);
+                erase(positions[msg.id].x-(width/2)+(frameWidth/2),positions[msg.id].y-30,width) 
+            }
+            
+            if(blurred){
+                missed++
+                document.title = '(' + missed + ')' + ' this.spooks.me'
+            }
+            audioElement.play();
+        }
+       
+        //clear message
+        function erase(x,y,width){
+            setTimeout(function(){
+                wd.clearRect(x-1,y-1, width+15,20);
+            },5000)
+        }
+    });
    
     function move(){
         //clear canvas
@@ -493,14 +530,6 @@ startY = 429;
             }
         }
     }
-    //emit position to the server
-    setInterval(function(){ 
-        socket.emit('pos',{
-            x : positions[hero.id].x,
-            y : positions[hero.id].y,
-            action : hero.action
-        });
-    }, 3000);
     
     //emit action to the server  
     function action(action){
@@ -514,38 +543,54 @@ startY = 429;
         }
     });
     
-    //receive new positions
-    socket.on('pos', function(data){
-        ary =  Object.keys(data);
-            for (i = 0; i < ary.length; i++) {
-                if(positions[ary[i]]){
-                    //update with new goto location
-                    if(ary[i] != hero.id){
-                        positions[ary[i]].xx = data[ary[i]].x;
-                        positions[ary[i]].yy = data[ary[i]].y;
-                        positions[ary[i]].action = data[ary[i]].action;
-                    }
-                    if(data[ary[i]].nick){
-                        positions[ary[i]].nick = data[ary[i]].nick
-                    }
-                    if(data[ary[i]].avy){
-                        positions[ary[i]].avy = new Image();
-                        positions[ary[i]].avy.src = data[ary[i]].avy;
-                    }
-                } else {
-                    //load new person
-                    positions[ary[i]] = {
-                        x:data[ary[i]].x,
-                        y:data[ary[i]].y,
-                        xx:data[ary[i]].x,
-                        yy:data[ary[i]].y,
-                        xpos:0,
-                        ypos:0,
-                        action:data[ary[i]].action,
-                        avy : image
+    $(function(){
+        var first = true;
+        //receive new positions
+        socket.on('pos', function(data){
+            ary =  Object.keys(data);
+                for (i = 0; i < ary.length; i++) {
+                    if(positions[ary[i]]){
+                        //update with new goto location
+                        if(ary[i] != hero.id){
+                            positions[ary[i]].xx = data[ary[i]].x;
+                            positions[ary[i]].yy = data[ary[i]].y;
+                            positions[ary[i]].action = data[ary[i]].action;
+                        }
+                        if(data[ary[i]].nick){
+                            positions[ary[i]].nick = data[ary[i]].nick
+                        }
+                    } else {
+                        //load new person
+                        positions[ary[i]] = {
+                            x:data[ary[i]].x,
+                            y:data[ary[i]].y,
+                            xx:data[ary[i]].x,
+                            yy:data[ary[i]].y,
+                            xpos:0,
+                            ypos:0,
+                            action:data[ary[i]].action,
+                            avy : image
+                        }
                     }
                 }
+            if(first){//get all avy images from server once loaded positions
+                socket.emit('loadavy');
             }
+            first = false;
+        });
+        
+        socket.on('loadavys', function(avy){
+            positions[avy.id].avy = new Image();
+            positions[avy.id].avy.src = avy.avy
+        });
+        
+        //emit position to the server
+        setInterval(function(){ 
+            socket.emit('pos',{
+                x : positions[hero.id].x,
+                y : positions[hero.id].y,
+                action : hero.action
+            });
+        }, 3000);
     });
-    
 //});
