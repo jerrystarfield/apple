@@ -215,7 +215,7 @@ startY = 429;
     });
 
     $('#chat input').blur(function(){
-        $('#chat').css('opacity','0.6')
+        $('#chat').css('opacity',''); // reset to hover css
     });
     
     //modify avy and convert before sending to server
@@ -366,8 +366,10 @@ startY = 429;
             message = document.createTextNode(msg.msg);
             el.appendChild(nameSpan);
             el.appendChild(message)
-            $('#messages').append(el);
-            $("#messages").animate({ scrollTop: $("#messages")[0].scrollHeight }, "slow");
+            var mess = $('#messages');
+            var scroll =  (mess[0].scrollHeight - mess.height()) - (mess.scrollTop() + 10) < 19;
+            mess.append(el);
+            if(scroll) mess.animate({ scrollTop: mess[0].scrollHeight - mess.height() }, "slow");
             
             if(type == 'chat'){
                 //style text
